@@ -1,4 +1,4 @@
-import requests, json, re, shutil, os
+import requests, json, re, shutil, os, time
 
 downloadFolder = None
 
@@ -16,8 +16,9 @@ def getImagesNamesFromGalHash(galHash):
     except TypeError: #this will occur if the gif gallery only has one gif in it
         return [galHash + ".gif"]
     except ValueError:
-        print(galHash)
-        raise ValueError
+        print("****ERROR****")
+        time.sleep(5)
+        return getImagesNamesFromGalHash(galHash)
     names = []
     for x in imageData:
         names.append(x["hash"] + x["ext"])
@@ -76,7 +77,8 @@ def downloadImage(name, fuckBandwidth = True):
     del response
 
 # a method that downloads all images given a search querry
-def downloadAllImagesFromSearch(search):
+def downloadAllImagesFromSearch(search, slow):
+    speedOpt = not slow
     scrollUrls = iterateUrl("http://imgur.com/search/score/all/page/*?scrolled&q=" + search + "&q_size_is_mpx=off")
     for scrollUrl in scrollUrls:
         galHashes = getGalHashesFromScrollPageUrl(scrollUrl)
@@ -84,11 +86,11 @@ def downloadAllImagesFromSearch(search):
             names = getImagesNamesFromGalHash(galHash)
             for name in names:
                 if not checkIfImageIsDownloaded(name):
-                    downloadImage(name)
+                    downloadImage(name, fuckBandwidth=speedOpt)
     return True
     
-changeDownloadFolder("defaultDownloadFolder")
+#changeDownloadFolder("defaultDownloadFolder")
 
-downloadAllImagesFromSearch("memes")
+#downloadAllImagesFromSearch("memes")
 
 #print(getGalHashesFromScrollPageUrl("http://imgur.com/search/score/all/page/1?scrolled&q=dank%20memes&q_size_is_mpx=off"))
