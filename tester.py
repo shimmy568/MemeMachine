@@ -5,4 +5,4 @@ def getWeb(url):
     page = page.content
     return page
 
-print(getWeb("http://imgur.com/gallery/6Nz1a"))
+print(getWeb("http://imgur.com/ajaxalbums/getimages/foTJK/hit.json"))
