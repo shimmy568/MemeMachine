@@ -1,4 +1,6 @@
-import requests, json, re
+import requests, json, re, shutil, os
+
+downloadFolder = None
 
 #gets a webpage
 def getPage(url):
@@ -6,13 +8,16 @@ def getPage(url):
     page = page.content
     return page
 
-#TODO code method that gets JSON file from the backend
+#a method that gets all the image names from a gallery hash in array format
 def getImagesNamesFromGalHash(galHash):
     reqJson = requests.get("http://imgur.com/ajaxalbums/getimages/" + galHash + "/hit.json")
     try:
         imageData = reqJson.json()["data"]["images"]
     except TypeError: #this will occur if the gif gallery only has one gif in it
         return [galHash + ".gif"]
+    except ValueError:
+        print(galHash)
+        raise ValueError
     names = []
     for x in imageData:
         names.append(x["hash"] + x["ext"])
@@ -41,23 +46,49 @@ def getGalHashesFromScrollPageUrl(url):
 		    start = cur
 		elif end == -1:
                     end = cur
-                    break
-	    pageCodes.append(page[start + 1:end])
+                    break    
+        pageCodes.append(page[start + 9 + 1:end])
     return pageCodes
 
-#TODO make method that checks if a image is allready downloaded
+#A method that checks if the image is allready in the downloads folder
+#---------------------------------------------------------------------
+#TODO make this process more effeicent by storing a list of all
+#the file names so you dont have to list the entire dir each time you get an image
 def checkIfImageIsDownloaded(imageName):
-    pass
+    global downloadFolder
+    items = os.listdir(downloadFolder) #gets all the items inside the download folder
+    if imageName in items:
+        return True
+    return False
 
-#TODO change the folder that the images download to
+#A method that sets the folder that the images will be downloaded to
 def changeDownloadFolder(folderName):
-    pass
+    global downloadFolder
+    downloadFolder = folderName + "/"
 
-#TODO make method that downloads the image to the folder
-def downloadImage(url):
-    pass
+#A method that downloads a single image from imgur given it's name (hash + extension)
+def downloadImage(name, fuckBandwidth = True):
+    global downloadFolder
+    url = "http://i.imgur.com/" + name
+    response = requests.get(url, stream=fuckBandwidth)
+    with open(downloadFolder + name, "wb") as out_file:
+        shutil.copyfileobj(response.raw, out_file)
+    del response
 
+# a method that downloads all images given a search querry
+def downloadAllImagesFromSearch(search):
+    scrollUrls = iterateUrl("http://imgur.com/search/score/all/page/*?scrolled&q=" + search + "&q_size_is_mpx=off")
+    for scrollUrl in scrollUrls:
+        galHashes = getGalHashesFromScrollPageUrl(scrollUrl)
+        for galHash in galHashes:
+            names = getImagesNamesFromGalHash(galHash)
+            for name in names:
+                if not checkIfImageIsDownloaded(name):
+                    downloadImage(name)
+    return True
+    
 changeDownloadFolder("defaultDownloadFolder")
 
-a = getImagesNamesFromGalHash("OJTwZuc")
-print(a)
+downloadAllImagesFromSearch("memes")
+
+#print(getGalHashesFromScrollPageUrl("http://imgur.com/search/score/all/page/1?scrolled&q=dank%20memes&q_size_is_mpx=off"))
