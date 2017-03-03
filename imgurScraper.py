@@ -1,6 +1,7 @@
 import requests, json, re, shutil, os, time
 
 downloadFolder = None
+downloading = False
 
 #gets a webpage
 def getPage(url):
@@ -66,6 +67,9 @@ def checkIfImageIsDownloaded(imageName):
 def changeDownloadFolder(folderName):
     global downloadFolder
     downloadFolder = folderName + "/"
+    items = os.listdir(".")
+    if not os.path.exists(folderName):
+        os.mkdir(folderName)
 
 #A method that downloads a single image from imgur given it's name (hash + extension)
 def downloadImage(name, fuckBandwidth = True):
@@ -76,9 +80,13 @@ def downloadImage(name, fuckBandwidth = True):
         shutil.copyfileobj(response.raw, out_file)
     del response
 
+def stopDownload():
+    downloading = False
+    
 # a method that downloads all images given a search querry
-def downloadAllImagesFromSearch(search, slow):
+def downloadAllImagesFromSearch(search, slow, startp, endp):
     speedOpt = not slow
+    downloading = False
     scrollUrls = iterateUrl("http://imgur.com/search/score/all/page/*?scrolled&q=" + search + "&q_size_is_mpx=off")
     for scrollUrl in scrollUrls:
         galHashes = getGalHashesFromScrollPageUrl(scrollUrl)
@@ -86,8 +94,14 @@ def downloadAllImagesFromSearch(search, slow):
             names = getImagesNamesFromGalHash(galHash)
             for name in names:
                 if not checkIfImageIsDownloaded(name):
-                    downloadImage(name, fuckBandwidth=speedOpt)
-    return True
+                    if downloading:
+                        downloadImage(name, fuckBandwidth=speedOpt)
+                    else:
+                        return
+    downloading = False
+
+def isDownloading():
+    return downloading
     
 #changeDownloadFolder("defaultDownloadFolder")
 
