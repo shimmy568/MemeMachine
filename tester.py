@@ -1,8 +1,4 @@
-import requests
+import imgurScraper
 
-def getWeb(url):
-    page = requests.get(url)
-    page = page.content
-    return page
-
-print(getWeb("http://imgur.com/search/score/all/page/1?scrolled&q=dank%20memes&q_size_is_mpx=off"))
+print(imgurScraper.iterateUrl("http://imgur.com/search/score/all/page/*?scrolled&q=memes&q_size_is_mpx=off"))
+ 

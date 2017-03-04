@@ -1,5 +1,5 @@
 import imgurScraper as IS
-import Tkinter, Tkconstants, tkFileDialog, tkMessageBox, thread
+import Tkinter, Tkconstants, tkFileDialog, tkMessageBox, tkFileDialog, thread
 
 class Interface:
     def __init__(self, top):
@@ -33,9 +33,9 @@ class Interface:
         self.endVar.set("300")
         self.endSpinner = Tkinter.Spinbox(frame, width=4, from_=1, to=1000, textvariable=self.endVar)
         self.endSpinner.grid(row=1, column=3)
-        self.var = Tkinter.IntVar()
-        self.slowDownloadCheckbox = Tkinter.Checkbutton(frame, text="Slow download", variable=self.var)
-        self.slowDownloadCheckbox.grid(row=2, column=2, columnspan=2, sticky=Tkinter.E)
+        self.downloadText = Tkinter.StringVar()
+        Tkinter.Label(frame, textvariable=self.downloadText).grid(row=2, column=2, columnspan=2, sticky=Tkinter.E)
+        self.downloadText.set("Not downloading...")
         
         frame.grid()
 
@@ -46,9 +46,14 @@ class Interface:
         if self.downloadThread != None:
             IS.stopDownload()
 
-    def downloadImages(args):
-        self.downloadThread = thread.start_new_thread(IS.downloadAllImagesFromSearch, (self.searchEntry.get(), bool(self.var.get()), start, end))
-            
+    def downloadImages(self, search, start, end):
+        IS.downloadAllImagesFromSearch(search, start, end)
+
+    def downloadMoniter(self):
+        while True:
+            if(IS.isDownloading()):
+                self.downloadText.set("downloading image: " + str(IS.getDownloadNum()))
+        
     def startDownload(self):
         if IS.isDownloading():
             self.displayError("Downloading", "You are allready downloading something")
@@ -58,9 +63,9 @@ class Interface:
             self.displayError("Page Error!", "Start page must be larger than the end page.")
             return
         IS.changeDownloadFolder(self.folderEntry.get())
-        self.downloadThread = thread.start_new_thread(IS.downloadAllImagesFromSearch, (self.searchEntry.get(), bool(self.var.get()), start, end))
-    
-        
+        self.downloadThread = thread.start_new_thread(self.downloadImages, (self.searchEntry.get(), start, end))
+
 master = Tkinter.Tk();
 interface = Interface(master)
+thread.start_new_thread(interface.downloadMoniter, ())
 master.mainloop()

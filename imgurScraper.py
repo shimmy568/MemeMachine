@@ -1,7 +1,9 @@
-import requests, json, re, shutil, os, time
+
+import requests, re, shutil, os, time
 
 downloadFolder = None
 downloading = False
+downloadNum = 0
 
 #gets a webpage
 def getPage(url):
@@ -84,9 +86,10 @@ def stopDownload():
     downloading = False
     
 # a method that downloads all images given a search querry
-def downloadAllImagesFromSearch(search, slow, startp, endp):
-    speedOpt = not slow
-    downloading = False
+def downloadAllImagesFromSearch(search, startp, endp):
+    global downloading, downloadNum
+    downloading = True
+    downloadNum = 0
     scrollUrls = iterateUrl("http://imgur.com/search/score/all/page/*?scrolled&q=" + search + "&q_size_is_mpx=off")
     for scrollUrl in scrollUrls:
         galHashes = getGalHashesFromScrollPageUrl(scrollUrl)
@@ -95,14 +98,22 @@ def downloadAllImagesFromSearch(search, slow, startp, endp):
             for name in names:
                 if not checkIfImageIsDownloaded(name):
                     if downloading:
-                        downloadImage(name, fuckBandwidth=speedOpt)
+                        downloadNum += 1
+                        print(downloadNum)
+                        downloadImage(name)
                     else:
                         return
     downloading = False
+    print("stopped")
 
 def isDownloading():
+    global downloading
     return downloading
-    
+
+def getDownloadNum():
+    global downloadNum
+    return downloadNum
+
 #changeDownloadFolder("defaultDownloadFolder")
 
 #downloadAllImagesFromSearch("memes")
