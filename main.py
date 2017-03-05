@@ -1,5 +1,5 @@
 import imgurScraper as IS
-import Tkinter, Tkconstants, tkFileDialog, tkMessageBox, tkFileDialog, thread
+import Tkinter, Tkconstants, tkFileDialog, tkMessageBox, tkFileDialog, thread, os
 
 class Interface:
     def __init__(self, top):
@@ -13,8 +13,10 @@ class Interface:
         #create all elements
         #who needs good design :P
         Tkinter.Label(frame, text="Folder: ").grid(row=0, sticky=Tkinter.W, padx=3, pady=3)
-        self.folderEntry = Tkinter.Entry(frame)
-        self.folderEntry.insert(0, "defaultDownloadFolder")
+        text = os.path.dirname(os.path.realpath(__file__)) + "/defaultDownloadFolder"
+        self.folderEntryVar = Tkinter.StringVar()
+        self.folderEntryVar.set(text)
+        self.folderEntry = Tkinter.Entry(frame, textvariable=self.folderEntryVar)
         self.folderEntry.grid(row=0, column=1, padx=3, pady=3)
 
         Tkinter.Label(frame, text="Search: ").grid(row=1, sticky=Tkinter.W, padx=3, pady=3)
@@ -24,17 +26,20 @@ class Interface:
         self.b1 = Tkinter.Button(frame, text="Download Images", command=self.startDownload)
         self.b1.grid(row=2, sticky=Tkinter.W, columnspan=2)
 
-        Tkinter.Label(frame, text="Start Page: ").grid(row=0, column=2, sticky=Tkinter.E)
-        self.startSpinner = Tkinter.Spinbox(frame, width=4, from_=1, to=1000)
-        self.startSpinner.grid(row=0, column=3)
+        self.b2 = Tkinter.Button(frame, text="Select", command=self.selectFolder)
+        self.b2.grid(row=0, column=2)
 
-        Tkinter.Label(frame, text="End Page: ").grid(row=1, column=2, stick=Tkinter.E)
+        Tkinter.Label(frame, text="Start Page: ").grid(row=0, column=3, sticky=Tkinter.E)
+        self.startSpinner = Tkinter.Spinbox(frame, width=4, from_=1, to=1000)
+        self.startSpinner.grid(row=0, column=4)
+
+        Tkinter.Label(frame, text="End Page: ").grid(row=1, column=3, stick=Tkinter.E)
         self.endVar = Tkinter.StringVar(top)
         self.endVar.set("300")
         self.endSpinner = Tkinter.Spinbox(frame, width=4, from_=1, to=1000, textvariable=self.endVar)
-        self.endSpinner.grid(row=1, column=3)
+        self.endSpinner.grid(row=1, column=4)
         self.downloadText = Tkinter.StringVar()
-        Tkinter.Label(frame, textvariable=self.downloadText).grid(row=2, column=2, columnspan=2, sticky=Tkinter.E)
+        Tkinter.Label(frame, textvariable=self.downloadText).grid(row=2, column=2, columnspan=3, sticky=Tkinter.E)
         self.downloadText.set("Not downloading...")
         
         frame.grid()
@@ -62,9 +67,13 @@ class Interface:
         if start > end:
             self.displayError("Page Error!", "Start page must be larger than the end page.")
             return
-        IS.changeDownloadFolder(self.folderEntry.get())
+        IS.changeDownloadFolder(self.folderEntryVar.get())
         self.downloadThread = thread.start_new_thread(self.downloadImages, (self.searchEntry.get(), start, end))
 
+    def selectFolder(self):
+        directoryName = tkFileDialog.askdirectory()
+        self.folderEntryVar.set(directoryName)
+        
 master = Tkinter.Tk();
 interface = Interface(master)
 thread.start_new_thread(interface.downloadMoniter, ())

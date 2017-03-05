@@ -11,13 +11,36 @@ def getPage(url):
     page = page.content
     return page
 
+def getImageNameWhenJSONFails(galHash):
+    page = getPage("http://imgur.com/gallery/" + galHash)
+    index = page.index('itemprop="contentURL"')
+    cur = index
+    start = -1
+    end = -1
+    numberOfQuotes = 0
+    while True:
+	cur -= 1
+	if page[cur] == '"':
+	    if numberOfQuotes < 2:
+		numberOfQuotes += 1
+	    else:
+		if start == -1:
+		    start = cur
+		elif end == -1:
+		    end = cur
+		    break
+    url = page[end + 15:start]
+    if url != "thumbnailUrl":
+	return url
+    return None
+
 #a method that gets all the image names from a gallery hash in array format
 def getImagesNamesFromGalHash(galHash):
     reqJson = requests.get("http://imgur.com/ajaxalbums/getimages/" + galHash + "/hit.json")
     try:
         imageData = reqJson.json()["data"]["images"]
     except TypeError: #this will occur if the gif gallery only has one gif in it
-        return [galHash + ".gif"]
+        return [getImageNameWhenJSONFails(galHash)]
     except ValueError:
         print("****ERROR****")
         time.sleep(5)
@@ -74,11 +97,13 @@ def changeDownloadFolder(folderName):
         os.mkdir(folderName)
 
 #A method that downloads a single image from imgur given it's name (hash + extension)
-def downloadImage(name, fuckBandwidth = True):
+def downloadImage(name, path=None):
     global downloadFolder
+    if path != None:
+        path = downloadFolder
     url = "http://i.imgur.com/" + name
-    response = requests.get(url, stream=fuckBandwidth)
-    with open(downloadFolder + name, "wb") as out_file:
+    response = requests.get(url, stream=True)
+    with open(path + name, "wb") as out_file:
         shutil.copyfileobj(response.raw, out_file)
     del response
 
@@ -95,16 +120,28 @@ def downloadAllImagesFromSearch(search, startp, endp):
         galHashes = getGalHashesFromScrollPageUrl(scrollUrl)
         for galHash in galHashes:
             names = getImagesNamesFromGalHash(galHash)
-            for name in names:
+            if len(names) > 1:
+                downloadAlbum(galHash, names)
+            else:
                 if not checkIfImageIsDownloaded(name):
                     if downloading:
                         downloadNum += 1
-                        print(downloadNum)
                         downloadImage(name)
                     else:
                         return
     downloading = False
     print("stopped")
+
+def downloadAlbum(name, imageHashs):
+    global downloadFolder, downloadNum
+    albumPath = downloadFolder + "/" + name
+    for x in imageHashes:
+         if not checkIfImageIsDownloaded(name):
+             if downloading:
+                 downloadNum += 1
+                 downloadImage(name, path=albumPath)
+             else:
+                 return
 
 def isDownloading():
     global downloading
