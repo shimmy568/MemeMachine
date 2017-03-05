@@ -77,4 +77,5 @@ class Interface:
 master = Tkinter.Tk();
 interface = Interface(master)
 thread.start_new_thread(interface.downloadMoniter, ())
+master.wm_title("Meme Machine")
 master.mainloop()

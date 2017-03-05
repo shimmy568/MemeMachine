@@ -81,9 +81,11 @@ def getGalHashesFromScrollPageUrl(url):
 #---------------------------------------------------------------------
 #TODO make this process more effeicent by storing a list of all
 #the file names so you dont have to list the entire dir each time you get an image
-def checkIfImageIsDownloaded(imageName):
+def checkIfImageIsDownloaded(imageName, path=None):
     global downloadFolder
-    items = os.listdir(downloadFolder) #gets all the items inside the download folder
+    if path == None:
+        path = downloadFolder
+    items = os.listdir(path) #gets all the items inside the download folder
     if imageName in items:
         return True
     return False
@@ -93,16 +95,22 @@ def changeDownloadFolder(folderName):
     global downloadFolder
     downloadFolder = folderName + "/"
     items = os.listdir(".")
+    makeFolderIfNotThere(folderName)
+
+def makeFolderIfNotThere(folderName):
     if not os.path.exists(folderName):
         os.mkdir(folderName)
 
 #A method that downloads a single image from imgur given it's name (hash + extension)
 def downloadImage(name, path=None):
     global downloadFolder
-    if path != None:
+    if path == None:
         path = downloadFolder
+    if name == None or name == "":
+        return
     url = "http://i.imgur.com/" + name
     response = requests.get(url, stream=True)
+    print("Name: " + name)
     with open(path + name, "wb") as out_file:
         shutil.copyfileobj(response.raw, out_file)
     del response
@@ -123,23 +131,24 @@ def downloadAllImagesFromSearch(search, startp, endp):
             if len(names) > 1:
                 downloadAlbum(galHash, names)
             else:
-                if not checkIfImageIsDownloaded(name):
+                if not checkIfImageIsDownloaded(names[0]):
                     if downloading:
                         downloadNum += 1
-                        downloadImage(name)
+                        downloadImage(names[0])
                     else:
                         return
     downloading = False
     print("stopped")
 
-def downloadAlbum(name, imageHashs):
+def downloadAlbum(name, imageHashes):
     global downloadFolder, downloadNum
-    albumPath = downloadFolder + "/" + name
+    albumPath = downloadFolder + name + "/"
+    makeFolderIfNotThere(albumPath)
     for x in imageHashes:
-         if not checkIfImageIsDownloaded(name):
+         if not checkIfImageIsDownloaded(x, path=albumPath):
              if downloading:
                  downloadNum += 1
-                 downloadImage(name, path=albumPath)
+                 downloadImage(x, path=albumPath)
              else:
                  return
 
