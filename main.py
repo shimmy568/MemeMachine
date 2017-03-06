@@ -6,6 +6,7 @@ class Interface:
         self.downloadThread = None
         top.resizable(0, 0)
         frame = Tkinter.Frame(top, borderwidth=3)
+        self.scraper = IS.scraperObject()
         
         frame.columnconfigure(0, weight=1)
         frame.columnconfigure(1, weight=3)
@@ -29,15 +30,16 @@ class Interface:
         self.b2 = Tkinter.Button(frame, text="Select", command=self.selectFolder)
         self.b2.grid(row=0, column=2)
 
-        Tkinter.Label(frame, text="Start Page: ").grid(row=0, column=3, sticky=Tkinter.E)
-        self.startSpinner = Tkinter.Spinbox(frame, width=4, from_=1, to=1000)
-        self.startSpinner.grid(row=0, column=4)
-
-        Tkinter.Label(frame, text="End Page: ").grid(row=1, column=3, stick=Tkinter.E)
-        self.endVar = Tkinter.StringVar(top)
-        self.endVar.set("300")
-        self.endSpinner = Tkinter.Spinbox(frame, width=4, from_=1, to=1000, textvariable=self.endVar)
-        self.endSpinner.grid(row=1, column=4)
+        self.downloadAllVar = Tkinter.IntVar()
+        downloadAllCheckbox = Tkinter.Checkbutton(frame, text="Download All", command=self.toggleDownloadAll, variable=self.downloadAllVar)
+        downloadAllCheckbox.grid(row=0, column=3, columnspan=2)
+        
+        Tkinter.Label(frame, text="Num Of Images: ").grid(row=1, column=3, sticky=Tkinter.E)
+        spinnerDe = Tkinter.StringVar()
+        spinnerDe.set("5000")
+        self.imageNumSpinner = Tkinter.Spinbox(frame, textvariable=spinnerDe, width=4, from_=1, to=999999)
+        self.imageNumSpinner.grid(row=1, column=4)   
+        
         self.downloadText = Tkinter.StringVar()
         Tkinter.Label(frame, textvariable=self.downloadText).grid(row=2, column=2, columnspan=3, sticky=Tkinter.E)
         self.downloadText.set("Not downloading...")
@@ -47,28 +49,32 @@ class Interface:
     def displayError(self, title, errorBody):
         tkMessageBox.showwarning(title, errorBody)
 
+    def toggleDownloadAll(self):
+        if self.downloadAllVar.get() == 1:
+            self.imageNumSpinner.config(state=Tkinter.DISABLED)
+        else:
+            self.imageNumSpinner.config(state="normal")
+
     def closeWindow():
         if self.downloadThread != None:
-            IS.stopDownload()
+            self.scraper.stopDownload()
 
-    def downloadImages(self, search, start, end):
-        IS.downloadAllImagesFromSearch(search, start, end)
+    def downloadImages(self, search, limit):
+        self.scraper.downloadAllImagesFromSearch(search, limit)
 
     def downloadMoniter(self):
         while True:
-            if(IS.isDownloading()):
-                self.downloadText.set("downloading image: " + str(IS.getDownloadNum()))
+            if(self.scraper.isDownloading()):
+                self.downloadText.set("downloading image: " + str(self.scraper.getDownloadNum()))
         
     def startDownload(self):
-        if IS.isDownloading():
+        if self.scraper.isDownloading():
             self.displayError("Downloading", "You are allready downloading something")
-        start = int(self.startSpinner.get())
-        end = int(self.endSpinner.get())
-        if start > end:
-            self.displayError("Page Error!", "Start page must be larger than the end page.")
-            return
-        IS.changeDownloadFolder(self.folderEntryVar.get())
-        self.downloadThread = thread.start_new_thread(self.downloadImages, (self.searchEntry.get(), start, end))
+        limit = int(self.imageNumSpinner.get())
+        if self.downloadAllVar.get() == 1:
+            limit = -1
+        self.scraper.changeDownloadFolder(self.folderEntryVar.get())
+        self.downloadThread = thread.start_new_thread(self.downloadImages, (self.searchEntry.get(), limit))
 
     def selectFolder(self):
         directoryName = tkFileDialog.askdirectory()
