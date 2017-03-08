@@ -34,7 +34,7 @@ class Interface:
         downloadAllCheckbox = Tkinter.Checkbutton(frame, text="Download All", command=self.toggleDownloadAll, variable=self.downloadAllVar)
         downloadAllCheckbox.grid(row=0, column=3, columnspan=2)
         
-        Tkinter.Label(frame, text="Num Of Images: ").grid(row=1, column=3, sticky=Tkinter.E)
+        Tkinter.Label(frame, text="Num of Images: ").grid(row=1, column=3, sticky=Tkinter.E)
         spinnerDe = Tkinter.StringVar()
         spinnerDe.set("5000")
         self.imageNumSpinner = Tkinter.Spinbox(frame, textvariable=spinnerDe, width=4, from_=1, to=999999)
@@ -42,13 +42,16 @@ class Interface:
         
         self.downloadText = Tkinter.StringVar()
         Tkinter.Label(frame, textvariable=self.downloadText).grid(row=2, column=2, columnspan=3, sticky=Tkinter.E)
-        self.downloadText.set("Not downloading...")
+        self.downloadText.set("Not Downloading...")
         
         frame.grid()
 
     def displayError(self, title, errorBody):
         tkMessageBox.showwarning(title, errorBody)
 
+    def finsihedDownload(self):
+        tkMessageBox.showinfo("Done", "All the images have been downloaded.")
+        
     def toggleDownloadAll(self):
         if self.downloadAllVar.get() == 1:
             self.imageNumSpinner.config(state=Tkinter.DISABLED)
@@ -59,13 +62,16 @@ class Interface:
         if self.downloadThread != None:
             self.scraper.stopDownload()
 
-    def downloadImages(self, search, limit):
+    def downloadImages(self, search, limit, done):
         self.scraper.downloadAllImagesFromSearch(search, limit)
+        done()
 
     def downloadMoniter(self):
         while True:
             if(self.scraper.isDownloading()):
-                self.downloadText.set("downloading image: " + str(self.scraper.getDownloadNum()))
+                self.downloadText.set("Downloading Image: " + str(self.scraper.getDownloadNum()))
+            else:
+                self.downloadText.set("Not Downloading...")
         
     def startDownload(self):
         if self.scraper.isDownloading():
@@ -74,7 +80,7 @@ class Interface:
         if self.downloadAllVar.get() == 1:
             limit = -1
         self.scraper.changeDownloadFolder(self.folderEntryVar.get())
-        self.downloadThread = thread.start_new_thread(self.downloadImages, (self.searchEntry.get(), limit))
+        self.downloadThread = thread.start_new_thread(self.downloadImages, (self.searchEntry.get(), limit, self.finsihedDownload))
 
     def selectFolder(self):
         directoryName = tkFileDialog.askdirectory()

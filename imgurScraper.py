@@ -6,7 +6,7 @@ class scraperObject:
         self.downloadFolder = None
         self.downloading = False
         self.downloadNum = 0
-        self.galHashes =[]
+        self.galHashes = []
         #gets a webpage
     def getPage(self, url):
         page = requests.get(url)
@@ -107,7 +107,6 @@ class scraperObject:
             return
         url = "http://i.imgur.com/" + name
         response = requests.get(url, stream=True)
-        print("Name: " + name)
         with open(path + name, "wb") as out_file:
             shutil.copyfileobj(response.raw, out_file)
         del response
@@ -141,6 +140,11 @@ class scraperObject:
             if len(galHashes) == 0:
                 break
             for galHash in galHashes:
+                print(self.downloadNum)
+                if not self.downloading or (self.downloadNum >= limit and limit != -1):
+                    self.downloading = False
+                    print("done")
+                    return
                 names = self.getImagesNamesFromGalHash(galHash)
                 if len(names) > 1:
                     self.downloadAlbum(galHash, names, limit)
@@ -153,23 +157,14 @@ class scraperObject:
                             print("done")
                             return
         self.downloading = False
-        print("done")
-        
-        while currentHash != "<DONE>":
-            if self.downloadNum > limit:
-                self.downloading = False
-                print("done")
-                return
-            currentHash = self.getGalHash(galNum)
-            galNum += 1
-            
+        print("done")             
 
     def downloadAlbum(self, name, imageHashes, limit):
         albumPath = self.downloadFolder + name + "/"
         self.makeFolderIfNotThere(albumPath)
         for x in imageHashes:
             if not self.checkIfImageIsDownloaded(x, path=albumPath):
-                if self.downloading or self.downloadNum > limit:
+                if self.downloading or self.downloadNum < limit or limit == -1:
                     self.downloadNum += 1
                     self.downloadImage(x, path=albumPath)
                 else:
