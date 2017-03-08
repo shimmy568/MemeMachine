@@ -1,6 +1,30 @@
 
 import requests, re, shutil, os, time, thread
 
+class settingsObject:
+    def __init__(self):
+        self.gifsOnly = False
+        self.FP = False
+        self.albumsInFolders = True
+
+    def setGifsOnly(self, val):
+        self.gifsOnly = val
+        
+    def setFP(self, val):
+        self.FP = val
+        
+    def setAlbumsInFolders(self, val):
+        self.albumsInFolders = val
+
+    def getGifsOnly(self):
+        return self.gifsOnly
+
+    def getFP(self):
+        return self.FP
+
+    def getAlbumsInFolders(self):
+        return self.albumsInFolders
+
 class scraperObject:
     def __init__(self):
         self.downloadFolder = None
@@ -100,10 +124,12 @@ class scraperObject:
             os.mkdir(folderName)
 
     #A method that downloads a single image from imgur given it's name (hash + extension)
-    def downloadImage(self, name, path=None):
+    def downloadImage(self, name, gifsOnly, path=None):
         if path == None:
             path = self.downloadFolder
         if name == None or name == "":
+            return
+        if gifsOnly and name[len(name) - 1]:
             return
         url = "http://i.imgur.com/" + name
         response = requests.get(url, stream=True)
@@ -128,11 +154,14 @@ class scraperObject:
         return curHash
 
     # a method that downloads all images given a search querry
-    def downloadAllImagesFromSearch(self, search, limit):
+    def downloadAllImagesFromSearch(self, search, limit, settings): #gifs only, folder album, front page
         self.downloading = True
         self.downloadNum = 0
         pageNum = 0
         searchUrl = "http://imgur.com/search/score/all/page/*?scrolled&q=" + search + "&q_size_is_mpx=off"
+        if settings.getFP():
+            searchUrl = "http://imgur.com/t/funny/viral/page/*/hit?scrolled"
+        gifsOnly = settings.getGifsOnly()
         currentHash = "first"
         while True:
             scrollPageUrl = self.getScrollPageUrl(searchUrl, pageNum)
@@ -146,27 +175,28 @@ class scraperObject:
                     print("done")
                     return
                 names = self.getImagesNamesFromGalHash(galHash)
-                if len(names) > 1:
-                    self.downloadAlbum(galHash, names, limit)
+                if len(names) > 1 or settings.setAlbumsInFolders():
+                    self.downloadAlbum(galHash, names, limit, gifsOnly)
                 else:
-                    if not self.checkIfImageIsDownloaded(names[0]):
-                        if self.downloading:
-                            self.downloadNum += 1
-                            self.downloadImage(names[0])
-                        else:
-                            print("done")
-                            return
+                    for name in names:
+                        if not self.checkIfImageIsDownloaded(name):
+                            if self.downloading:
+                                self.downloadNum += 1
+                                self.downloadImage(name, gifsOnly)
+                            else:
+                                print("done")
+                                return
         self.downloading = False
         print("done")             
 
-    def downloadAlbum(self, name, imageHashes, limit):
+    def downloadAlbum(self, name, imageHashes, limit, gifsOnly):
         albumPath = self.downloadFolder + name + "/"
         self.makeFolderIfNotThere(albumPath)
         for x in imageHashes:
             if not self.checkIfImageIsDownloaded(x, path=albumPath):
                 if self.downloading or self.downloadNum < limit or limit == -1:
                     self.downloadNum += 1
-                    self.downloadImage(x, path=albumPath)
+                    self.downloadImage(x, gifsOnly, path=albumPath)
                 else:
                     return
 
