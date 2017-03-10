@@ -99,7 +99,7 @@ class Interface:
         if self.downloadAllVar.get() == 1:
             limit = -1
         searchQ = self.searchEntry.get()
-        settings = IS.settingObject()
+        settings = IS.settingsObject()
         if self.frontPage.get() == 1:
             settings.setFP(True)
         if self.gifsOnly.get() == 1:

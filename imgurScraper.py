@@ -129,7 +129,8 @@ class scraperObject:
             path = self.downloadFolder
         if name == None or name == "":
             return
-        if gifsOnly and name[len(name) - 1]:
+        if gifsOnly and name[len(name) - 1] != "f":
+            self.downloadNum -= 1
             return
         url = "http://i.imgur.com/" + name
         response = requests.get(url, stream=True)
@@ -158,24 +159,35 @@ class scraperObject:
         self.downloading = True
         self.downloadNum = 0
         pageNum = 0
+        setNum = 0
         searchUrl = "http://imgur.com/search/score/all/page/*?scrolled&q=" + search + "&q_size_is_mpx=off"
+        print(settings.getFP())
         if settings.getFP():
-            searchUrl = "http://imgur.com/t/funny/viral/page/*/hit?scrolled"
+            searchUrl = "http://imgur.com/t/funny/viral/page/*/hit?scrolled&set="
         gifsOnly = settings.getGifsOnly()
         currentHash = "first"
         while True:
-            scrollPageUrl = self.getScrollPageUrl(searchUrl, pageNum)
+            scrollPageUrl = None
+            if settings.getFP(): #having a sepprate if path from the normal one for the front page bc of the set thing
+                scrollPageUrl = self.getScrollPageUrl(searchUrl, pageNum) + str(setNum) 
+                if setNum == 10:
+                    setNum = 0
+                    pageNum += 1
+                else:
+                    setNum += 1
+            else:
+                scrollPageUrl = self.getScrollPageUrl(searchUrl, pageNum)
+                pageNum += 1
             galHashes = self.getGalHashesFromScrollPageUrl(scrollPageUrl)
             if len(galHashes) == 0:
                 break
             for galHash in galHashes:
-                print(self.downloadNum)
                 if not self.downloading or (self.downloadNum >= limit and limit != -1):
                     self.downloading = False
                     print("done")
                     return
                 names = self.getImagesNamesFromGalHash(galHash)
-                if len(names) > 1 or settings.setAlbumsInFolders():
+                if len(names) > 1 and settings.getAlbumsInFolders():
                     self.downloadAlbum(galHash, names, limit, gifsOnly)
                 else:
                     for name in names:
