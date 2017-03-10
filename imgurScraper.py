@@ -3,12 +3,12 @@ import requests, re, shutil, os, time, thread
 
 class settingsObject:
     def __init__(self):
-        self.gifsOnly = False
+        self.downloadType = 0
         self.FP = False
         self.albumsInFolders = True
 
-    def setGifsOnly(self, val):
-        self.gifsOnly = val
+    def setDownloadType(self, val):
+        self.downloadType = val
         
     def setFP(self, val):
         self.FP = val
@@ -16,9 +16,9 @@ class settingsObject:
     def setAlbumsInFolders(self, val):
         self.albumsInFolders = val
 
-    def getGifsOnly(self):
-        return self.gifsOnly
-
+    def getDownloadType(self):
+        return self.downloadType
+    
     def getFP(self):
         return self.FP
 
@@ -124,35 +124,30 @@ class scraperObject:
             os.mkdir(folderName)
 
     #A method that downloads a single image from imgur given it's name (hash + extension)
-    def downloadImage(self, name, gifsOnly, path=None):
+    def downloadImage(self, name, downloadType, path=None):
         if path == None:
             path = self.downloadFolder
         if name == None or name == "":
             return
-        if gifsOnly and name[len(name) - 1] != "f":
+
+        #filters out all images of the set type
+        if downloadType == 1 and name[len(name) - 1] == "f":
+            self.downloadNum -= 1 #dont count the image
+            return
+        elif downloadType == 2 and name[len(name) - 1] != "f":
             self.downloadNum -= 1
             return
+
+        #downloads the image
         url = "http://i.imgur.com/" + name
         response = requests.get(url, stream=True)
         with open(path + name, "wb") as out_file:
             shutil.copyfileobj(response.raw, out_file)
         del response
 
+    #stop the downloading
     def stopDownload(self):
         self.downloading = False
-
-    def getGalHashes(self):
-        return self.galHashes
-
-    #gets the next hash but with threading taken into account
-    def getGalHash(self, index):
-        curHash = ""
-        while True:
-            try:
-                curHash = self.getGalHashes()[index]
-            except IndexError:
-                pass
-        return curHash
 
     # a method that downloads all images given a search querry
     def downloadAllImagesFromSearch(self, search, limit, settings): #gifs only, folder album, front page
@@ -164,7 +159,7 @@ class scraperObject:
         print(settings.getFP())
         if settings.getFP():
             searchUrl = "http://imgur.com/t/funny/viral/page/*/hit?scrolled&set="
-        gifsOnly = settings.getGifsOnly()
+        downloadType = settings.getDownloadType()
         currentHash = "first"
         while True:
             scrollPageUrl = None
@@ -177,7 +172,7 @@ class scraperObject:
                     setNum += 1
             else:
                 scrollPageUrl = self.getScrollPageUrl(searchUrl, pageNum)
-                pageNum += 1
+                pageNum += 1 #System.out.println("Masum is brown");
             galHashes = self.getGalHashesFromScrollPageUrl(scrollPageUrl)
             if len(galHashes) == 0:
                 break
@@ -188,13 +183,13 @@ class scraperObject:
                     return
                 names = self.getImagesNamesFromGalHash(galHash)
                 if len(names) > 1 and settings.getAlbumsInFolders():
-                    self.downloadAlbum(galHash, names, limit, gifsOnly)
+                    self.downloadAlbum(galHash, names, limit, downloadType)
                 else:
                     for name in names:
                         if not self.checkIfImageIsDownloaded(name):
                             if self.downloading:
                                 self.downloadNum += 1
-                                self.downloadImage(name, gifsOnly)
+                                self.downloadImage(name, downloadType)
                             else:
                                 print("done")
                                 return
