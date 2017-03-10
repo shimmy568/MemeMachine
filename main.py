@@ -58,7 +58,7 @@ class Interface:
         self.imageNumSpinner.grid(row=1, column=5)   
         
         self.downloadText = Tkinter.StringVar()
-        Tkinter.Label(frame, textvariable=self.downloadText).grid(row=4, column=2, columnspan=3, sticky=Tkinter.E)
+        Tkinter.Label(frame, textvariable=self.downloadText).grid(row=4, column=2, columnspan=4, sticky=Tkinter.E)
         self.downloadText.set("Not Downloading...")
         
         frame.grid()
@@ -85,16 +85,15 @@ class Interface:
         if self.downloadThread != None:
             self.scraper.stopDownload()
 
-    def downloadImages(self, search, limit, settings, done):
-        self.scraper.downloadAllImagesFromSearch(search, limit, settings)
+    def downloadImages(self, search, limit, settings, done, updateCallback):
+        self.scraper.downloadAllImagesFromSearch(search, limit, settings, updateCallback)
         done()
 
-    def downloadMoniter(self):
-        while True:
-            if(self.scraper.isDownloading()):
-                self.downloadText.set("Downloading Image: " + str(self.scraper.getDownloadNum()))
-            else:
-                self.downloadText.set("Not Downloading...")
+    def downloadMoniter(self, downloading, downloadNum):
+        if(downloading):
+            self.downloadText.set("Downloading Image: " + str(downloadNum))
+        else:
+            self.downloadText.set("Not Downloading...")
         
     def startDownload(self):
         if self.scraper.isDownloading():
@@ -110,7 +109,7 @@ class Interface:
         if self.albumIntoFolders.get() == 0:
             settings.setAlbumsInFolders(False)
         self.scraper.changeDownloadFolder(self.folderEntryVar.get())
-        self.downloadThread = thread.start_new_thread(self.downloadImages, (searchQ, limit, settings, self.finsihedDownload))
+        self.downloadThread = thread.start_new_thread(self.downloadImages, (searchQ, limit, settings, self.finsihedDownload, self.downloadMoniter))
 
     def selectFolder(self):
         directoryName = tkFileDialog.askdirectory()
@@ -118,6 +117,5 @@ class Interface:
         
 master = Tkinter.Tk();
 interface = Interface(master)
-thread.start_new_thread(interface.downloadMoniter, ())
 master.wm_title("Meme Machine")
 master.mainloop()

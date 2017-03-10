@@ -150,7 +150,7 @@ class scraperObject:
         self.downloading = False
 
     # a method that downloads all images given a search querry
-    def downloadAllImagesFromSearch(self, search, limit, settings): #gifs only, folder album, front page
+    def downloadAllImagesFromSearch(self, search, limit, settings, updateCallback): #gifs only, folder album, front page
         self.downloading = True
         self.downloadNum = 0
         pageNum = 0
@@ -183,12 +183,13 @@ class scraperObject:
                     return
                 names = self.getImagesNamesFromGalHash(galHash)
                 if len(names) > 1 and settings.getAlbumsInFolders():
-                    self.downloadAlbum(galHash, names, limit, downloadType)
+                    self.downloadAlbum(galHash, names, limit, downloadType, updateCallback)
                 else:
                     for name in names:
                         if not self.checkIfImageIsDownloaded(name):
                             if self.downloading:
                                 self.downloadNum += 1
+                                updateCallback(self.downloading, self.downloadNum)
                                 self.downloadImage(name, downloadType)
                             else:
                                 print("done")
@@ -204,6 +205,7 @@ class scraperObject:
                 if self.downloading or self.downloadNum < limit or limit == -1:
                     self.downloadNum += 1
                     self.downloadImage(x, gifsOnly, path=albumPath)
+                    updateCallback(self.downloading, self.downloadNum)
                 else:
                     return
 
