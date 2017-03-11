@@ -1,3 +1,2 @@
-- limit downloading to gifs only
-- front page button
-- add toggle for album's going into sepprate folders
+- add the ability to download multiple tags through the use of commas
+- change it so it will download equal amounts of images from each tag
