@@ -6,6 +6,8 @@ The best in meme downloading technology, introducing the MemeMachine! Download t
 
 ###Linux / Windows (not sure about windows)
 
+First make sure you have python installed. Get it [here] (https://wiki.python.org/moin/BeginnersGuide/Download)
+
 Install dependencies (for now dependency :P)
 
 > pip install -r requirments.txt
