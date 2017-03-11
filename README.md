@@ -7,12 +7,12 @@ The best in meme downloading technology, introducing the MemeMachine! Download t
 ###Linux / Windows (not sure about windows)
 
 Install dependencies (for now dependency :P)
-'''
-pip install -r requirments.txt
-'''
+
+> pip install -r requirments.txt
+
 
 Then to run it
-'''
-python main.py
-'''
+
+> python main.py
+
 
