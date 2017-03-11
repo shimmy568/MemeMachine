@@ -2,9 +2,10 @@
 
 The best in meme downloading technology, introducing the MemeMachine! Download thousands of memes with the click of a button!
 
-## Installation
+## How to use
 
-###Linux / Windows (not sure about windows)
+Download (or clone) the program using the green button in the upper right hand corner of the page.
+If you dont want to clone it just use the download ZIP button.
 
 First make sure you have python installed. Get it [here] (https://wiki.python.org/moin/BeginnersGuide/Download)
 
