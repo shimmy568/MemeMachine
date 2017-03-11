@@ -149,8 +149,30 @@ class scraperObject:
     def stopDownload(self):
         self.downloading = False
 
-    # a method that downloads all images given a search querry
-    def downloadAllImagesFromSearch(self, search, limit, settings, updateCallback): #gifs only, folder album, front page
+    #a method that was used to divide a number into a whole number as equal as possible
+    def divideIntoEqualParts(self, num, n):
+        nums = []
+        extra = num % n
+        minimum = int(num / n)
+        for x in range(n): #create the base array with the minimum value for all spots
+            nums.append(minimum)
+
+        for x in range(extra): #add the extra on to the numbers
+            nums[x] += 1
+
+        return nums
+
+    #download all images from the search querry while keeping each search from the full search
+    #(sepperated with ,) having an equal amount of images downloaded
+    def downloadAllImagesFromSearch(self, search, totalLimit, settings, updateCallback):
+        tags = search.split(",")
+        limits = divideIntoEqualParts(totalLimit, len(tags))
+        for x in range(len(tags)):
+            currentTag = tags[x].strip()
+            downloadAllImagesFromTag(currentTag, limits[x], settings, updateCallback)
+            
+    # a method that downloads all images given a tag search thing
+    def downloadAllImagesFromTag(self, search, limit, settings, updateCallback): #gifs only, folder album, front page
         self.downloading = True
         self.downloadNum = 0
         pageNum = 0

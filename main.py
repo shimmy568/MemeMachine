@@ -67,6 +67,7 @@ class Interface:
         tkMessageBox.showwarning(title, errorBody)
 
     def finsihedDownload(self):
+        downloadMoniter(false, 0)
         tkMessageBox.showinfo("Done", "All the images have been downloaded.")
         
     def toggleDownloadAll(self):
