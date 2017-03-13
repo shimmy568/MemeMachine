@@ -1,5 +1,5 @@
 
-import requests, re, shutil, os, time, thread
+import requests, re, shutil, os, time
 
 class settingsObject:
     def __init__(self):
@@ -124,7 +124,7 @@ class scraperObject:
             os.mkdir(folderName)
 
     #A method that downloads a single image from imgur given it's name (hash + extension)
-    def downloadImage(self, name, downloadType, path=None):
+    def downloadImage(self, name, downloadType, updateCallback, path=None):
         if path == None:
             path = self.downloadFolder
         if name == None or name == "":
@@ -132,13 +132,13 @@ class scraperObject:
 
         #filters out all images of the set type
         if downloadType == 1 and name[len(name) - 1] == "f":
-            self.downloadNum -= 1 #dont count the image
             return
         elif downloadType == 2 and name[len(name) - 1] != "f":
-            self.downloadNum -= 1
             return
 
         #downloads the image
+        self.downloadNum += 1
+        updateCallback(self.downloading, self.downloadNum)
         url = "http://i.imgur.com/" + name
         response = requests.get(url, stream=True)
         with open(path + name, "wb") as out_file:
@@ -165,12 +165,16 @@ class scraperObject:
     #download all images from the search querry while keeping each search from the full search
     #(sepperated with ,) having an equal amount of images downloaded
     def downloadAllImagesFromSearch(self, search, totalLimit, settings, updateCallback):
+        updateCallback(True, 0)
         tags = search.split(",")
         limits = self.divideIntoEqualParts(totalLimit, len(tags))
         for x in range(len(tags)):
             currentTag = tags[x].strip()
-            self.downloadAllImagesFromTag(currentTag, limits[x], settings, updateCallback)
-            
+            try:
+                self.downloadAllImagesFromTag(currentTag, limits[x], settings, updateCallback)
+            except RuntimeError:
+                return #program has stopped
+                
     # a method that downloads all images given a tag search thing
     def downloadAllImagesFromTag(self, search, limit, settings, updateCallback): #gifs only, folder album, front page
         self.downloading = True
@@ -178,7 +182,6 @@ class scraperObject:
         pageNum = 0
         setNum = 0
         searchUrl = "http://imgur.com/search/score/all/page/*?scrolled&q=" + search + "&q_size_is_mpx=off"
-        print(settings.getFP())
         if settings.getFP():
             searchUrl = "http://imgur.com/t/funny/viral/page/*/hit?scrolled&set="
         downloadType = settings.getDownloadType()
@@ -200,8 +203,7 @@ class scraperObject:
                 break
             for galHash in galHashes:
                 if not self.downloading or (self.downloadNum >= limit and limit != -1):
-                    self.downloading = False
-                    print("done")
+                    self.doneDownloading(updateCallback)
                     return
                 names = self.getImagesNamesFromGalHash(galHash)
                 if len(names) > 1 and settings.getAlbumsInFolders():
@@ -210,25 +212,23 @@ class scraperObject:
                     for name in names:
                         if not self.checkIfImageIsDownloaded(name):
                             if self.downloading:
-                                self.downloadNum += 1
-                                updateCallback(self.downloading, self.downloadNum)
-                                self.downloadImage(name, downloadType)
+                                self.downloadImage(name, downloadType, updateCallback)
                             else:
-                                print("done")
+                                self.doneDownloading(updateCallback)
                                 return
+        self.doneDownloading(updateCallback)          
+
+    def doneDownloading(self, updateCallback):
         self.downloading = False
-        print("done")                     
+        updateCallback(False, 0)
         
     def downloadAlbum(self, name, imageHashes, limit, downloadType, updateCallback):
         albumPath = self.downloadFolder + name + "/"
         self.makeFolderIfNotThere(albumPath)
         for x in imageHashes:
             if not self.checkIfImageIsDownloaded(x, path=albumPath):
-                if self.downloading or self.downloadNum < limit or limit == -1:
-                    self.downloadNum += 1
-                    updateCallback(self.downloading, self.downloadNum)
-                    self.downloadImage(x, downloadType, path=albumPath)
-                    updateCallback(self.downloading, self.downloadNum)
+                if self.downloading and (self.downloadNum < limit or limit == -1):
+                    self.downloadImage(x, downloadType, updateCallback, path=albumPath)
                 else:
                     return
 

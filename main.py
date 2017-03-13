@@ -1,5 +1,5 @@
 import imgurScraper as IS
-import Tkinter, Tkconstants, tkFileDialog, tkMessageBox, tkFileDialog, thread, os
+import Tkinter, Tkconstants, tkFileDialog, tkMessageBox, tkFileDialog, threading, os
 
 class Interface:
     def __init__(self, top):
@@ -67,7 +67,10 @@ class Interface:
         tkMessageBox.showwarning(title, errorBody)
 
     def finsihedDownload(self):
-        downloadMoniter(false, 0)
+        try:
+            self.downloadMoniter(False, 0)
+        except RuntimeError:
+            return
         tkMessageBox.showinfo("Done", "All the images have been downloaded.")
         
     def toggleDownloadAll(self):
@@ -110,7 +113,8 @@ class Interface:
         if self.albumIntoFolders.get() == 0:
             settings.setAlbumsInFolders(False)
         self.scraper.changeDownloadFolder(self.folderEntryVar.get())
-        self.downloadThread = thread.start_new_thread(self.downloadImages, (searchQ, limit, settings, self.finsihedDownload, self.downloadMoniter))
+        self.downloadThread = threading.Thread(target=self.downloadImages, args=(searchQ, limit, settings, self.finsihedDownload, self.downloadMoniter))
+        self.downloadThread.start()
 
     def selectFolder(self):
         directoryName = tkFileDialog.askdirectory()
