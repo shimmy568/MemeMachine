@@ -166,10 +166,10 @@ class scraperObject:
     #(sepperated with ,) having an equal amount of images downloaded
     def downloadAllImagesFromSearch(self, search, totalLimit, settings, updateCallback):
         tags = search.split(",")
-        limits = divideIntoEqualParts(totalLimit, len(tags))
+        limits = self.divideIntoEqualParts(totalLimit, len(tags))
         for x in range(len(tags)):
             currentTag = tags[x].strip()
-            downloadAllImagesFromTag(currentTag, limits[x], settings, updateCallback)
+            self.downloadAllImagesFromTag(currentTag, limits[x], settings, updateCallback)
             
     # a method that downloads all images given a tag search thing
     def downloadAllImagesFromTag(self, search, limit, settings, updateCallback): #gifs only, folder album, front page
@@ -217,16 +217,17 @@ class scraperObject:
                                 print("done")
                                 return
         self.downloading = False
-        print("done")             
-
-    def downloadAlbum(self, name, imageHashes, limit, gifsOnly):
+        print("done")                     
+        
+    def downloadAlbum(self, name, imageHashes, limit, downloadType, updateCallback):
         albumPath = self.downloadFolder + name + "/"
         self.makeFolderIfNotThere(albumPath)
         for x in imageHashes:
             if not self.checkIfImageIsDownloaded(x, path=albumPath):
                 if self.downloading or self.downloadNum < limit or limit == -1:
                     self.downloadNum += 1
-                    self.downloadImage(x, gifsOnly, path=albumPath)
+                    updateCallback(self.downloading, self.downloadNum)
+                    self.downloadImage(x, downloadType, path=albumPath)
                     updateCallback(self.downloading, self.downloadNum)
                 else:
                     return
