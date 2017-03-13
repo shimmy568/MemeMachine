@@ -12,6 +12,8 @@ Follow [this] (https://github.com/BurntSushi/nfldb/wiki/Python-&-pip-Windows-ins
 
 Install dependencies (for now dependency :P)
 
+Navigate open up a terminal (cmd) then navigate to the folder you downloaded it in. Then run this command.
+
 > pip install -r requirments.txt
 
 
