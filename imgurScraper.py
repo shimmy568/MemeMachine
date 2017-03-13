@@ -174,6 +174,8 @@ class scraperObject:
                 self.downloadAllImagesFromTag(currentTag, limits[x], settings, updateCallback)
             except RuntimeError:
                 return #program has stopped
+            if not self.downloading:
+                return
                 
     # a method that downloads all images given a tag search thing
     def downloadAllImagesFromTag(self, search, limit, settings, updateCallback): #gifs only, folder album, front page
