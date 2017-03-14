@@ -130,6 +130,9 @@ class scraperObject:
         if name == None or name == "":
             return
 
+        if name[len(name) - 1] != "g" and name[len(name) - 1] != "f":
+            name = name[:len(name) - 2]
+
         #filters out all images of the set type
         if downloadType == 1 and name[len(name) - 1] == "f":
             return
@@ -141,6 +144,7 @@ class scraperObject:
         updateCallback(self.downloading, self.downloadNum)
         url = "http://i.imgur.com/" + name
         response = requests.get(url, stream=True)
+        
         with open(path + name, "wb") as out_file:
             shutil.copyfileobj(response.raw, out_file)
         del response
