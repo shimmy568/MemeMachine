@@ -177,6 +177,7 @@ class scraperObject:
             try:
                 self.downloadAllImagesFromTag(currentTag, limits[x], settings, updateCallback)
             except RuntimeError:
+                print("Finishing downloads... (To exit now press CTRL+C)")
                 return #program has stopped
             if not self.downloading:
                 return
@@ -203,7 +204,7 @@ class scraperObject:
                     setNum += 1
             else:
                 scrollPageUrl = self.getScrollPageUrl(searchUrl, pageNum)
-                pageNum += 1 #System.out.println("Masum is brown");
+                pageNum += 1 
             galHashes = self.getGalHashesFromScrollPageUrl(scrollPageUrl)
             if len(galHashes) == 0:
                 break
@@ -244,8 +245,4 @@ class scraperObject:
     def getDownloadNum(self):
         return self.downloadNum
 
-#changeDownloadFolder("defaultDownloadFolder")
 
-#downloadAllImagesFromSearch("memes")
-
-#print(getGalHashesFromScrollPageUrl("http://imgur.com/search/score/all/page/1?scrolled&q=dank%20memes&q_size_is_mpx=off"))
