@@ -21,7 +21,7 @@ Then to run it
 
 > python main.py
 
-##Features
+## Features
 
 Search: This will tell the program what images to search for. You can have multiple searches sepperated by commas. e.g. memes, dank memes. You can also check the box that says FP to get the images just on the front page
 
