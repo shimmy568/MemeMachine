@@ -17,7 +17,7 @@ Navigate open up a terminal (cmd) then navigate to the folder you downloaded it 
 > pip install -r requirments.txt
 
 
-Then to run it
+Then to run it (Python 2.x)
 
 > python main.py
 
