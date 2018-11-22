@@ -39,7 +39,10 @@ class scraperObject:
 
     def getImageNameWhenJSONFails(self, galHash):
         page = self.getPage("http://imgur.com/gallery/" + galHash)
-        index = page.index('itemprop="contentURL"')
+        try:
+            index = page.index('itemprop="contentURL"')
+        except:
+            return None
         cur = index
         start = -1
         end = -1
